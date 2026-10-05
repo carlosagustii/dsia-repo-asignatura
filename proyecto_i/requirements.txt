@@ -1,0 +1,4 @@
+# Proyecto I — dependencias mínimas
+pandas>=2.2
+pytest>=8.0
+pytest-cov>=5.0

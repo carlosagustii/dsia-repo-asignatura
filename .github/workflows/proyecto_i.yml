@@ -1,0 +1,48 @@
+# CI del Proyecto I (Parte A: ventas_app + Parte B: churn_app).
+# Si el proyecto se mueve a su propio repo: renombrar a ci.yml y quitar
+# `working-directory` y el filtro `paths`.
+name: proyecto-i-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proyecto_i
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: proyecto_i/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Unit tests (sin integración)
+        run: pytest -q -m "not integration"
+
+      - name: All tests + coverage gate (>= 60%)
+        run: |
+          pytest -q \
+            --cov=ventas_app \
+            --cov=churn_app \
+            --cov-report=term-missing \
+            --cov-fail-under=60
+
+      - name: Smoke test de las dos CLI
+        run: |
+          python -m ventas_app.cli --input data/ventas.csv --json > /dev/null
+          python -m churn_app.cli --input data/telco_churn.csv --json > /dev/null
